@@ -15,11 +15,11 @@ def plwin(par,d_parbl,d_raw):
     plc.pyface(par,len(d_raw),d_raw,out,d_parbl[42:61])
     return d_parbl,out
 
-def pltest(parfile,doplot=0):
+def pltest(parfile,data,doplot=0):
     import numpy
     par=numpy.intc(numpy.loadtxt(parfile))
     import scipy.io
-    mat=scipy.io.loadmat("15234489.mat",squeeze_me=True)
+    mat=scipy.io.loadmat(data,squeeze_me=True)
     nr=int(len(mat['d_raw'])/2)
     d_parbl,dd_data=plwin(par,mat['d_parbl'],mat['d_raw'][:nr-1])
     
@@ -46,6 +46,6 @@ if __name__ == "__main__":
         if o=="-s": site=a
         if o=="-p": p=1
     try:
-        pltest(exp[0],p)
+        pltest(exp[0],exp[1],p)
     except:
-        print('Usage: '+sys.argv[0]+' [manda_va.par]')
+        print('Usage: '+sys.argv[0]+' [manda_va.par] [data_file]')
