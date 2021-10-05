@@ -6,14 +6,13 @@
 #include <assert.h>
 #include <pthread.h>
 
+double get_tid (void);
+void print_tid (double diff_time, int nth, char *decode);
+
 #define         DSP_NODECO      0
 #define         DSP_ACDECO      1
 #define         DSP_TAILDECO    2
-#define         MAX_NR_THREADS  15
-#ifdef __linux__
-#define DATAFILE "/proc/cpuinfo"
-#endif
-
+#define         MAX_NR_THREADS  4 
 typedef struct			/* Make a new internal data type */
 {
   float re;
@@ -79,24 +78,6 @@ typedef struct
 
 
 
-#ifdef __linux__
-int *get_cpu_speeds (void);
-__inline__ unsigned long long int gethrtime (void);
-#else
-#include <sys/time.h>
-#ifndef NANOSEC /*gcc?*/
-#include <time.h>
-#define NANOSEC 1000000000
-typedef	unsigned long long int hrtime_t;
-unsigned long gethrtime(void)
-{
-	struct timespec ts;
-	if (clock_gettime(CLOCK_MONOTONIC_RAW, &ts) != 0) return (-1);
-	return ((ts.tv_sec * NANOSEC) + ts.tv_nsec);
-}
-#endif
-#endif
-
 int __user__decolen (int nsamples, int maxlag, int codelen, int nfract,
 		     int taildeco);
 
@@ -129,12 +110,12 @@ static void __user__filter (DSPCMPLX * yy0, float *h0, DSPCMPLX * x0,
 			    long *ny, long nh, long nx, int accum, int decim);
 
 int
-decoder_6 (unsigned long dbits,
+alter_dec (unsigned long dbits,
 	   int *dpar, unsigned long fbits, float *fpar, DSPCMPLXSHORT * in,
-	   DSPCMPLX * out,double *upar)
+	   DSPCMPLX * out, double *upar)
 {
   int nr_ipp, nlags, k, sub_int, vec_len, nsamples,
-    nr_code_sets, ret_code, code_nr, j, jjj,nr_slices=1;
+    nr_code_sets, ret_code, code_nr, j, jjj, nr_slices = 1;
 
   DECO *deco_send[MAX_NR_THREADS];
   DSPCMPLX *lag_res1, *lag_res2, *out_res;
@@ -143,18 +124,13 @@ decoder_6 (unsigned long dbits,
   DECO *deco;
   DACCINFO *info;
   float tid = 0.0;
-#ifdef __linux__
-  int *speeds;
-  float cpu_speed;
-#endif
-#ifdef __linux__
-  unsigned long long int start = 0, stop = 0;
-#else /* just for Solaris */
-  hrtime_t start = 0, stop = 0;
-#endif
+  double start = 0;
   deco = malloc (sizeof (DECO));
   info = malloc (sizeof (DACCINFO));
 
+  /*for (k = 0; k < 7; k++)
+    printf (" %d", dpar[k]);
+  printf ("\n");*/
   deco->nbits = dpar[0];
   nr_ipp = dpar[1];
   vec_len = dpar[2];
@@ -162,11 +138,12 @@ decoder_6 (unsigned long dbits,
   deco->maxlag = (dpar[4] - deco->nfract + 1) / deco->nfract;
   sub_int = dpar[5];
   nr_code_sets = dpar[6];
-  if(nr_code_sets<0) {
-	nr_code_sets*=-1;
-	nr_slices=nr_ipp/nr_code_sets;
-	nr_ipp=nr_code_sets;
-  }
+  if (nr_code_sets < 0)
+    {
+      nr_code_sets *= -1;
+      nr_slices = nr_ipp / nr_code_sets;
+      nr_ipp = nr_code_sets;
+    }
   deco->decomode = DSP_TAILDECO;
   deco->zprflen1 = (deco->nbits - 1) * deco->nfract + vec_len - 1;
   deco->rmsa = 0;
@@ -179,11 +156,9 @@ decoder_6 (unsigned long dbits,
   deco->nr_code_sets = nr_code_sets;
   deco->sub_int = sub_int;
   deco->dpar = dpar;
-#ifdef __linux__
-  speeds = get_cpu_speeds ();
-  cpu_speed = speeds[0] * 1.0e6;
-#endif
-  start = gethrtime ();
+  /*printf ("%ld %d %d %ld %ld %d %d %d\n", deco->nbits, nr_ipp, vec_len,
+	  deco->nfract, deco->maxlag, sub_int, nr_code_sets, nr_slices);*/
+  start = get_tid ();
   nsamples = deco->zprflen1 - (deco->nbits - 1) * deco->nfract + 1;
   if ((threads =
        (pthread_t *) malloc (MAX_NR_THREADS * sizeof (pthread_t))) == NULL)
@@ -228,15 +203,15 @@ decoder_6 (unsigned long dbits,
       exit (EXIT_FAILURE);
     }
   if (pthread_attr_setinheritsched (&thread_sched, PTHREAD_INHERIT_SCHED) !=
-      0)
-    {
-      perror ("pthread_attr_setinheritsched thread_sched");
-    }
+     0)
+     {
+     perror ("pthread_attr_setinheritsched thread_sched");
+     }
 
-  if (pthread_attr_setschedpolicy (&thread_sched, SCHED_FIFO) != 0)
-    {
-      perror ("pthread_attr_setchedpolicy thread_sched");
-    }
+     if (pthread_attr_setschedpolicy (&thread_sched, SCHED_FIFO) != 0)
+     {
+     perror ("pthread_attr_setchedpolicy thread_sched");
+     } 
   ret_code = pthread_attr_setscope (&thread_sched, PTHREAD_SCOPE_SYSTEM);
   if (ret_code != 0)
     {
@@ -245,15 +220,86 @@ decoder_6 (unsigned long dbits,
     }
 
 
- for (jjj=0;jjj<nr_slices;jjj++) {
-  bzero (out, sizeof (DSPCMPLX) * deco->ndeco);
-  deco->out = out;
-  code_nr = 0;
-  deco->ipp = -1;
-  deco->nr_threads = MAX_NR_THREADS;
-  for (j = 0; j < (int) (nr_code_sets / MAX_NR_THREADS); j++)
+  for (jjj = 0; jjj < nr_slices; jjj++)
     {
-      for (k = 0; k < MAX_NR_THREADS; k++)
+      bzero (out, sizeof (DSPCMPLX) * deco->ndeco);
+      deco->out = out;
+      code_nr = 0;
+      deco->ipp = -1;
+      deco->nr_threads = MAX_NR_THREADS;
+      for (j = 0; j < (int) (nr_code_sets / MAX_NR_THREADS); j++)
+	{
+	  for (k = 0; k < MAX_NR_THREADS; k++)
+	    {
+	      deco->ipp++;
+	      memcpy (deco_send[k], deco, sizeof (DECO));
+	      deco_send[k]->lag_res1 = lag_res1 + (nlags + 1) * vec_len * k;
+	      deco_send[k]->lag_res2 =
+		lag_res2 + (nlags + 1) * deco->zprflen1 * k;
+	      deco_send[k]->in = in;
+	      deco_send[k]->out_res = out_res + deco->ndeco * k;
+	      deco_send[k]->info = info;
+	      deco_send[k]->code_nr = code_nr++;
+	      ret_code =
+		pthread_create (&(threads[k]), &thread_sched,
+				(void *(*)(void *)) __user__decoder_thread,
+				(void *) deco_send[k]);
+	      if (ret_code != 0)
+		{
+		  printf ("pthread create 1 error= %d\n", ret_code);
+		  exit (EXIT_FAILURE);
+		}
+	    }
+	  for (k = 0; k < MAX_NR_THREADS; k++)
+	    {
+	      /*
+	       * Wait for all channels to be ready if running
+	       * threaded
+	       */
+	      ret_code = pthread_join (threads[k], NULL);
+	      if (ret_code != 0)
+		{
+		  printf ("pthread_join 1 error=%d\n", ret_code);
+		  exit (EXIT_FAILURE);
+		}
+	    }
+	  for (k = 0; k < MAX_NR_THREADS; k++)
+	    {
+	      deco->thread_nr = k;
+	      memcpy (deco_send[k], deco, sizeof (DECO));
+	      deco_send[k]->out_res = out_res;
+	      deco_send[k]->out = out;
+	      deco_send[k]->info = info;
+	      ret_code =
+		pthread_create (&(threads[k]), &thread_sched,
+				(void *(*)(void *))
+				__user__decoder_int_thread,
+				(void *) deco_send[k]);
+	      if (ret_code != 0)
+		{
+		  printf ("pthread create 1 error= %d\n", ret_code);
+		  exit (EXIT_FAILURE);
+		}
+
+	    }
+	  for (k = 0; k < MAX_NR_THREADS; k++)
+	    {
+	      /*
+	       * Wait for all channels to be ready if running
+	       * threaded
+	       */
+	      ret_code = pthread_join (threads[k], NULL);
+	      if (ret_code != 0)
+		{
+		  printf ("pthread_join 1 error=%d\n", ret_code);
+		  exit (EXIT_FAILURE);
+		}
+	    }
+	}
+      deco->nr_threads =
+	nr_code_sets -
+	((int) (nr_code_sets / MAX_NR_THREADS)) * MAX_NR_THREADS;
+      for (k = 0; k < deco->nr_threads; k++)
 	{
 	  deco->ipp++;
 	  memcpy (deco_send[k], deco, sizeof (DECO));
@@ -275,7 +321,7 @@ decoder_6 (unsigned long dbits,
 	    }
 
 	}
-      for (k = 0; k < MAX_NR_THREADS; k++)
+      for (k = 0; k < deco->nr_threads; k++)
 	{
 	  /*
 	   * Wait for all channels to be ready if running
@@ -288,7 +334,7 @@ decoder_6 (unsigned long dbits,
 	      exit (EXIT_FAILURE);
 	    }
 	}
-      for (k = 0; k < MAX_NR_THREADS; k++)
+      for (k = 0; k < deco->nr_threads; k++)
 	{
 	  deco->thread_nr = k;
 	  memcpy (deco_send[k], deco, sizeof (DECO));
@@ -304,9 +350,8 @@ decoder_6 (unsigned long dbits,
 	      printf ("pthread create 1 error= %d\n", ret_code);
 	      exit (EXIT_FAILURE);
 	    }
-
 	}
-      for (k = 0; k < MAX_NR_THREADS; k++)
+      for (k = 0; k < deco->nr_threads; k++)
 	{
 	  /*
 	   * Wait for all channels to be ready if running
@@ -319,76 +364,11 @@ decoder_6 (unsigned long dbits,
 	      exit (EXIT_FAILURE);
 	    }
 	}
+      out += deco->ndeco;
+      in += (vec_len * nr_code_sets);
+      /*print_tid (get_tid () - start, MAX_NR_THREADS, "alt_decoder");
+      printf ("\n");*/
     }
-  deco->nr_threads =
-    nr_code_sets - ((int) (nr_code_sets / MAX_NR_THREADS)) * MAX_NR_THREADS;
-  for (k = 0; k < deco->nr_threads; k++)
-    {
-      deco->ipp++;
-      memcpy (deco_send[k], deco, sizeof (DECO));
-      deco_send[k]->lag_res1 = lag_res1 + (nlags + 1) * vec_len * k;
-      deco_send[k]->lag_res2 = lag_res2 + (nlags + 1) * deco->zprflen1 * k;
-      deco_send[k]->in = in;
-      deco_send[k]->out_res = out_res + deco->ndeco * k;
-      deco_send[k]->info = info;
-      deco_send[k]->code_nr = code_nr++;
-      ret_code =
-	pthread_create (&(threads[k]), &thread_sched,
-			(void *(*)(void *)) __user__decoder_thread,
-			(void *) deco_send[k]);
-      if (ret_code != 0)
-	{
-	  printf ("pthread create 1 error= %d\n", ret_code);
-	  exit (EXIT_FAILURE);
-	}
-
-    }
-  for (k = 0; k < deco->nr_threads; k++)
-    {
-      /*
-       * Wait for all channels to be ready if running
-       * threaded
-       */
-      ret_code = pthread_join (threads[k], NULL);
-      if (ret_code != 0)
-	{
-	  printf ("pthread_join 1 error=%d\n", ret_code);
-	  exit (EXIT_FAILURE);
-	}
-    }
-  for (k = 0; k < deco->nr_threads; k++)
-    {
-      deco->thread_nr = k;
-      memcpy (deco_send[k], deco, sizeof (DECO));
-      deco_send[k]->out_res = out_res;
-      deco_send[k]->out = out;
-      deco_send[k]->info = info;
-      ret_code =
-	pthread_create (&(threads[k]), &thread_sched,
-			(void *(*)(void *)) __user__decoder_int_thread,
-			(void *) deco_send[k]);
-      if (ret_code != 0)
-	{
-	  printf ("pthread create 1 error= %d\n", ret_code);
-	  exit (EXIT_FAILURE);
-	}
-    }
-  for (k = 0; k < deco->nr_threads; k++)
-    {
-      /*
-       * Wait for all channels to be ready if running
-       * threaded
-       */
-      ret_code = pthread_join (threads[k], NULL);
-      if (ret_code != 0)
-	{
-	  printf ("pthread_join 1 error=%d\n", ret_code);
-	  exit (EXIT_FAILURE);
-	}
-    }
-  out+=deco->ndeco;
-  in+=(vec_len*nr_code_sets);
- }
 
   free (deco);
   free (out_res);
@@ -410,13 +390,8 @@ decoder_6 (unsigned long dbits,
 	  free (deco_send[k]);
 	}
     }
-  stop = gethrtime ();
-#ifdef __linux__
-  tid = (float) (stop - start) * 1.e6 / cpu_speed;
-#else
-  tid = (float) (stop - start) / 1000;
-#endif
-  printf ("The alt_dec has taken %6.2g s\n", tid / 1.e6);
+  print_tid (get_tid() - start, deco->nr_threads, "alt_decoder");
+  printf ("\n");
   return 0;
 }
 
@@ -1054,52 +1029,6 @@ __user__lag_profiling (DSPCMPLXSHORT * data, DSPCMPLX * res, ulong msize,
     }
 }
 
-#ifdef __linux__
-/*
- * Only used for linux, a high resulotion timer operating at the CPU clock
- * speed are returned
- *  */
-__inline__ unsigned long long int
-gethrtime (void)
-{
-	#define NANOSEC 1000000000
-	struct timespec ts;
-	if (clock_gettime(CLOCK_MONOTONIC_RAW, &ts) != 0) return (-1);
-	return ((ts.tv_sec * NANOSEC) + ts.tv_nsec);
-/*  unsigned long long int x = 0;
-  __asm__ volatile (".byte 0x0f, 0x31":"=A" (x));
-  return x;*/
-}
-
-int *
-get_cpu_speeds (void)
-{
-  char buf[BUFSIZ];
-  int cnt = 0, *MHz = NULL;
-  FILE *fp;
-
-  if (NULL == (fp = fopen (DATAFILE, "r")))
-    {
-      fprintf (stderr, "Can't open <%s>.\n", DATAFILE);
-      exit (EXIT_FAILURE);
-    }
-
-  while (fgets (buf, sizeof buf, fp))
-    {
-      if (!strncmp (buf, "cpu MHz", 7))
-	{
-	  if (NULL == (MHz = realloc (MHz, sizeof (int) * (cnt + 2))))
-	    {
-	      fprintf (stderr, "Out of Memory.\n");
-	      exit (EXIT_FAILURE);
-	    }
-	  MHz[cnt++] = atoi (buf + 11);
-	  MHz[cnt] = 0;
-	}
-    }
-  return MHz;
-}
-#endif
 
 void *
 __user__decoder_thread (DECO * deco_send)
@@ -1178,7 +1107,7 @@ __user__decoder_int_thread (DECO * calc)
 
   thread_nr = calc->thread_nr;
   max_nr_thread = calc->nr_threads;
-  nsamples = calc->ndeco ;
+  nsamples = calc->ndeco;
   samples = (int) (nsamples / max_nr_thread);
   if (thread_nr == (max_nr_thread - 1))
     {
@@ -1202,23 +1131,28 @@ __user__decoder_int_thread (DECO * calc)
   return ((void *) &success);
 }
 
-void matface(int *par,int *nin,double *in_r,double *in_i,
-	int *nout, double *out_r, double *out_i, double *upar) {
-	ulong nb=7+par[0]*par[6];
-	float *fpar=NULL;
-	int i;
-	DSPCMPLXSHORT *in;
-	DSPCMPLX *out;
-	in=(DSPCMPLXSHORT *)malloc(*nin*sizeof(DSPCMPLXSHORT));
-	for(i=0;i<*nin;i++) {
-		in[i].re=in_r[i];
-		in[i].im=in_i[i];
-	}
-	out=(DSPCMPLX *)malloc(*nout*sizeof(DSPCMPLX));
-	decoder_6(nb,par,0,fpar,in,out,upar);
-	for(i=0;i<*nout;i++) {
-		out_r[i]=out[i].re;
-		out_i[i]=out[i].im;
-	}
-	free(in); free(out);
+void
+matface (int *par, int *nin, double *in_r, double *in_i,
+	 int *nout, double *out_r, double *out_i, double *upar)
+{
+  ulong nb = 7 + par[0] * par[6];
+  float *fpar = NULL;
+  int i;
+  DSPCMPLXSHORT *in;
+  DSPCMPLX *out;
+  in = (DSPCMPLXSHORT *) malloc (*nin * sizeof (DSPCMPLXSHORT));
+  for (i = 0; i < *nin; i++)
+    {
+      in[i].re = in_r[i];
+      in[i].im = in_i[i];
+    }
+  out = (DSPCMPLX *) malloc (*nout * sizeof (DSPCMPLX));
+  alter_dec (nb, par, 0, fpar, in, out, upar);
+  for (i = 0; i < *nout; i++)
+    {
+      out_r[i] = out[i].re;
+      out_i[i] = out[i].im;
+    }
+  free (in);
+  free (out);
 }
