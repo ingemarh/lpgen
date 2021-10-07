@@ -152,12 +152,9 @@ def acdecgen(exp_name,ac_code,code_tx,nr_loop,loops,isamp,ion_frac,ion_lag):
 		parfile.write('%d\n' % ac_code[i])
 	parfile.close
 
-def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,expver,start_samp,isamp,calstop):
+def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,dspexp,start_samp,isamp,calstop):
 	cal_length=cal_samp*samp_speed
-	if expver<2:
-		t_to_ps=open('t_to_ps.txt.%s'%(site),'w')
-	else:
-		t_to_ps=open('t_to_ps.txt_%d.%s'%(expver,site),'w')
+	t_to_ps=open('%s_%s_t2ps.txt'%(dspexp,site),'w')
 	k=0
 	for j in range(1,loops+1):
 		k=k+1;

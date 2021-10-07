@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-def plwin(par,upar,d_raw):
+def plwin(par,upar,d_raw=None):
     import numpy as np
     from numpy import ctypeslib as cl
     import ctypes
@@ -11,6 +11,9 @@ def plwin(par,upar,d_raw):
     plc.pyface.argtypes=[cl.ndpointer(np.intc),ctypes.c_int,cl.ndpointer(np.complex128),
                         cl.ndpointer(np.complex64),cl.ndpointer(np.float_)]
     nout=((par[2]+1)*par[8]+par[2]*par[1]/2+par[3]*par[8])*par[9]+(par[6]+par[10])*par[9]+par[19]*(par[17]+par[18]+1)
+    if d_raw is None:
+        nin=par[6]*par[5]
+        d_raw=np.random.randint(10,size=nin)+np.random.randint(10,size=nin)*1j
     out=np.zeros(int(nout),np.complex64);
     plc.pyface(par,len(d_raw),d_raw,out,upar)
     return upar,out

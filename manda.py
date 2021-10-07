@@ -4,7 +4,6 @@ def myexp(site):
 	print('Doing experiment files for site='+site)
 	###### Setup section
 	dspexp='manda'		#Experiment version
-	expver=1.00		#Experiment version
 	exp_name=dspexp+'-'+site#Name of experiment
 	cal_samp=10		#Number of calibration and bakground samples
 	loops=128		#Number of loops in a complete cycle
@@ -76,4 +75,4 @@ def myexp(site):
 
 	ac_code=par_gen.acgen(code_len,code_tx,nr_codes)
 	isamp=par_gen.plwingen(nr_pulses,plasma_pulses,plasma_frac,code_tx,nr_fullgates,dspexp,site,ion_frac,tails,mthread,nr_codes,nr_loop,dshort,dlong,ndgat,clutts,toptail,lowtail,loops,ac_code)
-	par_gen.t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,expver,start_samp,isamp,calstop)
+	par_gen.t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,dspexp,start_samp,isamp,calstop)
