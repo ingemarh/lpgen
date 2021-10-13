@@ -182,5 +182,6 @@ if __name__ == "__main__":
 	try:
 		exp=importlib.import_module(exp[0])
 		exp.myexp(site)
-	except:
+	except Exception as why:
+		print(why)
 		print('Usage ./par_gen.py [-s v] [manda]')

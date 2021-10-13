@@ -13,7 +13,10 @@ def pltest(parfile,doplot=0,data=None):
         nr=0
         draw=None
         upar=numpy.zeros(20)
-    upar,dd_data=lp.plwin(par,upar,draw)
+    if 'a.par' in parfile:
+        upar,dd_data=lp.plwin(par,upar,draw)
+    elif 'ac.par' in parfile:
+        dd_data=lp.altdec(par,draw)
     
     if doplot:
         from matplotlib import pyplot as p
@@ -40,8 +43,8 @@ if __name__ == "__main__":
     for o,a in opts:
         if o=="-s": site=a
         if o=="-p": p=1
+        if o=="-h":
+            print('Usage: '+sys.argv[0]+' [manda_va.par] [data_file]')
+            exit(1)
     if len(exp)==1: exp.append(None)
-    try:
-        pltest(exp[0],p,exp[1])
-    except:
-        print('Usage: '+sys.argv[0]+' [manda_va.par] [data_file]')
+    pltest(exp[0],p,exp[1])
