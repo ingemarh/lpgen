@@ -134,6 +134,7 @@ def plwingen(nr_pulses,plasma_pulses,plasma_frac,code_tx,nr_fullgates,dspexp,sit
 			parf.write('%d\n'%ac_code[ii])
 		parlen=npar+code_tx*nr_codes
 		parf.close()
+	print('%s generated\n'%parf.name)
 	return isamp
 
 def cluttgen(exp_name,loops,nr_loop,isamp,clutts,ion_frac):
@@ -142,6 +143,7 @@ def cluttgen(exp_name,loops,nr_loop,isamp,clutts,ion_frac):
 	for i in range(len(pars)):
 		parfile.write('%d\n' % pars[i])
 	parfile.close
+	print('%s generated\n'%parfile.name)
 
 def acdecgen(exp_name,ac_code,code_tx,nr_loop,loops,isamp,ion_frac,ion_lag):
 	parfile = open(exp_name + 'ac.par', 'w')
@@ -151,6 +153,7 @@ def acdecgen(exp_name,ac_code,code_tx,nr_loop,loops,isamp,ion_frac,ion_lag):
 	for i in range(code_tx * loops):
 		parfile.write('%d\n' % ac_code[i])
 	parfile.close
+	print('%s generated'%parfile.name)
 
 def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,dspexp,start_samp,isamp,calstop):
 	cal_length=cal_samp*samp_speed
@@ -168,10 +171,16 @@ def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ip
 			Print_t2ps(t_to_ps,t2,t3,1,0)
 		Print_t2ps(t_to_ps,t1,t3,2,trx_frq)
 	t_to_ps.close
+	print('%s generated'%t_to_ps.name)
+
+def gen(exp,site='v'):
+	import importlib
+	expr=importlib.import_module(exp)
+	expr.myexp(site)
 
 if __name__ == "__main__":
-	import getopt,sys,importlib
-	site='v'		#Name of site
+	import getopt,sys
+	site=None
 	try:
 		opts,exp=getopt.getopt(sys.argv[1:],"s:")
 	except getopt.GetoptError:
@@ -180,8 +189,7 @@ if __name__ == "__main__":
 		if o=="-s":
 			site=a
 	try:
-		exp=importlib.import_module(exp[0])
-		exp.myexp(site)
+		gen(exp[0],site)
 	except Exception as why:
 		print(why)
 		print('Usage ./par_gen.py [-s v] [manda]')
