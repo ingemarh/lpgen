@@ -15,8 +15,10 @@ def pltest(parfile,doplot=0,data=None):
         upar=numpy.zeros(20)
     if 'a.par' in parfile:
         upar,dd_data=lp.plwin(par,upar,draw)
+        print('plwin passed')
     elif 'ac.par' in parfile:
         dd_data=lp.altdec(par,draw)
+        print('altdec passed')
     
     if doplot:
         from matplotlib import pyplot as p
