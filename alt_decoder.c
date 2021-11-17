@@ -1167,7 +1167,8 @@ void
 pyface (int *par, int nin, DSPCMPLXDBL * in_r, DSPCMPLX * out)
 {
   ulong nb = par[0] + par[4] * par[7];
-  float *fpar = NULL,*upar = NULL;
+  float *fpar = NULL;
+  double *upar = NULL;
   int i;
   DSPCMPLXSHORT *in;
   in = (DSPCMPLXSHORT *) malloc (nin * sizeof (DSPCMPLXSHORT));

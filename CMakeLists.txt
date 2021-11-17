@@ -2,11 +2,18 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_C_COMPILER gcc)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_VERBOSE_MAKEFILE ON)
-add_compile_options(-O4 -cpp -ffast-math -march=native)
+set(PKG "$ENV{PKG}")
+if(PKG)
+	add_compile_options(-O4 -cpp -ffast-math -m64)
+else()
+	add_compile_options(-O4 -cpp -ffast-math -march=native)
+endif()
 
-project(dsp)
+project(lpgen)
+#add_subdirectory(lpgen)
 
 option(GUPTHREAD "Build with pthreads" ON)
+option(ANSI_C "ANSI_C" ON)
 #add_compile_options(-O4 -Wall -march=native)
 
 add_library(plwin SHARED
