@@ -352,3 +352,32 @@ matface (int *par, int *nin, double *in_r, double *in_i,
   free (in);
   free (out);
 }
+
+typedef struct
+{
+  double re;
+  double im;
+} DSPCMPLXDBL;
+
+void
+pyface (int *par, int nin, DSPCMPLXDBL * in_r, DSPCMPLX * out, double *upar)
+{
+  ulong nb = 8;
+  float *fpar = NULL;
+  int i;
+  DSPCMPLXSHORT *in;
+  in = (DSPCMPLXSHORT *) malloc (nin * sizeof (DSPCMPLXSHORT));
+  for (i = 0; i < nin; i++)
+    {
+      in[i].re = in_r[i].re;
+      in[i].im = in_r[i].im;
+    }
+  decoder_6 (nb, par, 0, fpar, in, out, upar);
+  for (i = 0; i < nin; i++)
+    {
+      in_r[i].re = in[i].re;
+      in_r[i].im = in[i].im;
+    }
+
+  free (in);
+}

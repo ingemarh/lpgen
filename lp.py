@@ -17,7 +17,7 @@ def plwin(par,upar,d_raw=None):
         d_raw=np.random.randint(-ad,ad+1,size=nin)+np.random.randint(-ad,ad+1,size=nin)*1j
     out=np.zeros(int(nout),np.complex64);
     plc.pyface(par,len(d_raw),d_raw,out,upar)
-    return upar,out
+    return upar,out,d_raw
 
 def acpoints(nsam,maxl,frac,nbit):
     n=0
@@ -44,3 +44,21 @@ def altdec(par,d_raw=None):
     out=np.zeros(int(nout),np.complex64);
     plc.pyface(par,len(d_raw),d_raw,out)
     return out
+
+def uniclut(par,upar,d_raw=None):
+    import numpy as np
+    from numpy import ctypeslib as cl
+    import ctypes
+
+    plc=cl.load_library("lib/clutter.so",".")
+    #void pface(int *par,int nin,DSPCMPLXDBL *in_r,DSPCMPLX *out)
+    plc.pyface.argtypes=[cl.ndpointer(np.intc),ctypes.c_int,cl.ndpointer(np.complex128),
+                        cl.ndpointer(np.complex64),cl.ndpointer(np.float_)]
+    nout=par[4]*par[7]-par[7]*(par[7]-1)//2
+    if par[7]==0, nout=1; end
+    if d_raw is None:
+        nin=par[1]*par[2]
+        d_raw=np.random.randint(-9,10,size=nin)+np.random.randint(-9,10,size=nin)*1j
+    out=np.zeros(int(nout),np.complex64);
+    plc.pyface(par,len(d_raw),d_raw,out,upar)
+    return upar,out,d_raw

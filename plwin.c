@@ -962,6 +962,11 @@ matface (int *par, int *nin, double *in_r, double *in_i,
       out_r[i] = out[i].re;
       out_i[i] = out[i].im;
     }
+  for (i = 0; i < *nin; i++)
+    {
+      in_r[i] = in[i].re;
+      in_i[i] = in[i].im;
+    }
   free (in);
   free (out);
 }
@@ -986,6 +991,11 @@ pyface (int *par, int nin, DSPCMPLXDBL * in_r, DSPCMPLX * out, double *upar)
       in[i].im = in_r[i].im;
     }
   decoder_6 (nb, par, 0, fpar, in, out, upar);
+  for (i = 0; i < nin; i++)
+    {
+      in_r[i].re = in[i].re;
+      in_r[i].im = in[i].im;
+    }
   free (in);
 }
 
