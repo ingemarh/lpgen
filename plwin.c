@@ -342,7 +342,7 @@ decoder_6 (ulong nbits, int *par, ulong fbits, float *fpar,
       if (float_notch)
 	nth_clutt = 1;		/* ew: Number of threads for cluttering, use one thread if filter width is set negative, =  filter widh from EROS */
       else
-	nth_clutt = pth.nth;	/* ew: otherwise use standard n threads */
+	nth_clutt = 1; //pth.nth;	/* ew: otherwise use standard n threads */
 
       /*ew                                            N                                       in                                              out                                                     direction               flags           */
       pth.pc = fftwf_plan_dft_1d (pth.fft_clutter, pth.inf, pth.inf + pth.fft_clutter, FFTW_FORWARD, FFTW_ESTIMATE | FFTW_DESTROY_INPUT);	/* executed in plwin_clutter */

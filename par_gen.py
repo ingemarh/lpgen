@@ -26,9 +26,9 @@ def AC_Trx(Baud_Len,Code,t_start,t_to_ps,frq):
 		t1=t2
 		j=j+length
 
-def acgen(code_len,code_tx,nr_codes):
+def acgen(code_len,code_tx,nr_codes,version='a'):
 	ac_code=[]
-	code_fil='m%d.ac'%code_len	#File with transmit codes
+	code_fil='m%d.%sc'%(code_len,version)	#File with transmit codes
 	random_code='+' * code_len
 	if code_len==32:
 		random_code='++--+-++++--+----+--+-+++---+-++'	#Code for randomisation
@@ -165,11 +165,12 @@ def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ip
 		t1=start_samp+ipp*(k-1)
 		t2=start_samp+isamp*samp_speed+ipp*(k-1)
 		Print_t2ps(t_to_ps,t1,t2,2,trx_frq)
-		t1=calstop-cal_length+ipp*(k-1)
-		t3=calstop+ipp*(k-1)
-		if(j%2):
-			Print_t2ps(t_to_ps,t2,t3,1,0)
-		Print_t2ps(t_to_ps,t1,t3,2,trx_frq)
+		if cal_length:
+			t1=calstop-cal_length+ipp*(k-1)
+			t3=calstop+ipp*(k-1)
+			if(j%2):
+				Print_t2ps(t_to_ps,t2,t3,1,0)
+			Print_t2ps(t_to_ps,t1,t3,2,trx_frq)
 	t_to_ps.close
 	print('%s generated'%t_to_ps.name)
 
