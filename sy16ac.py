@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 def myexp(site):
-	import par_gen
+	try:
+		import lpgen.par_gen as par_gen
+	except:
+		import par_gen
 	###### Setup section
 	dspexp='sy16ac'		#Experiment version
 	cal_samp=0		#Number of calibration and bakground samples

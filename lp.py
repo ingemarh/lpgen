@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+def lpath():
+    import os
+    return os.path.realpath(__file__)
 
 def plwin(par,upar,d_raw=None):
     import numpy as np
@@ -6,7 +9,7 @@ def plwin(par,upar,d_raw=None):
     import ctypes
     #par[15]=3
 
-    plc=cl.load_library("lib/plwin.so",".")
+    plc=cl.load_library("lib/plwin.so",lpath())
     #void pface(int *par,int nin,DSPCMPLXDBL *in_r,DSPCMPLX *out,double *upar)
     plc.pyface.argtypes=[cl.ndpointer(np.intc),ctypes.c_int,cl.ndpointer(np.complex128),
                         cl.ndpointer(np.complex64),cl.ndpointer(np.float_)]
@@ -32,7 +35,7 @@ def altdec(par,d_raw=None):
     from numpy import ctypeslib as cl
     import ctypes
 
-    plc=cl.load_library("lib/alt_decoder.so",".")
+    plc=cl.load_library("lib/alt_decoder.so",lpath())
     #void pface(int *par,int nin,DSPCMPLXDBL *in_r,DSPCMPLX *out)
     plc.pyface.argtypes=[cl.ndpointer(np.intc),ctypes.c_int,cl.ndpointer(np.complex128),
                         cl.ndpointer(np.complex64)]
@@ -50,12 +53,12 @@ def uniclut(par,upar,d_raw=None):
     from numpy import ctypeslib as cl
     import ctypes
 
-    plc=cl.load_library("lib/clutter.so",".")
+    plc=cl.load_library("lib/clutter.so",lpath())
     #void pface(int *par,int nin,DSPCMPLXDBL *in_r,DSPCMPLX *out)
     plc.pyface.argtypes=[cl.ndpointer(np.intc),ctypes.c_int,cl.ndpointer(np.complex128),
                         cl.ndpointer(np.complex64),cl.ndpointer(np.float_)]
     nout=par[4]*par[7]-par[7]*(par[7]-1)//2
-    if par[7]==0, nout=1; end
+    if par[7]==0: nout=1
     if d_raw is None:
         nin=par[1]*par[2]
         d_raw=np.random.randint(-9,10,size=nin)+np.random.randint(-9,10,size=nin)*1j

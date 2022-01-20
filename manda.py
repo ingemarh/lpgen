@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 def myexp(site):
-	import par_gen
+	try:
+		import lpgen.par_gen as par_gen
+	except:
+		import par_gen
 	print('Doing experiment files for site='+site)
 	###### Setup section
 	dspexp='manda'		#Experiment version

@@ -26,7 +26,7 @@ def pltest(parfile,doplot=0,writedata=0,data=None):
         draw=None
         upar=numpy.zeros(20)
     if 'a.par' in parfile:
-        upar,dd_data=lp.plwin(par,upar,draw)
+        upar,dd_data,draw=lp.plwin(par,upar,draw)
         print('plwin passed')
     elif 'ac.par' in parfile:
         dd_data=lp.altdec(par,draw)
