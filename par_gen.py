@@ -34,8 +34,12 @@ def acgen(code_len,code_tx,nr_codes,version='a'):
 		random_code='++--+-++++--+----+--+-+++---+-++'	#Code for randomisation
 	elif code_len==256:
 		random_code='++++---+-+-+++--+-+-+-+-----+++---+--+++--+-+++----------++-+--++-+---+---++-+++-+-+-+++--+-+-++++++-+++++++++-+++++--++++++++--+-+--+++++++---+--+++-+-+-+++++++--+++++++----++++------++--+-+--+-+++++-++-+--++---++-+-++-+--+-++---+++++-++--++--+++-+-+-+-++'
-	ac_code=[]
-	lines=open(code_fil,'r').readlines()
+	ac._code=[]
+        try:
+	    lines=open(code_fil,'r').readlines()
+        except:
+	    import lpgen.lp
+	    lines=open(lpgen.lp.lpath()+'/'+code_fil,'r').readlines()
 	ll=range(len(lines))
 	import numpy
 	numpy.random.seed(0)
