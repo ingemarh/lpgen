@@ -12,7 +12,7 @@ def Print_t2ps(t_to_ps,t1,t2,a,f):
 	f2='%.1f'
 	if t1%1==0: f1='%.0f'
 	if t2%1==0: f2='%.0f'
-	form=(f1+'\t'+f2+'\t%d\t%d\n')
+	form=(f1+'\t'+f2+'\t%d\t%g\n')
 	t_to_ps.write(form%(t1,t2,a,f))
 
 def AC_Trx(Baud_Len,Code,t_start,t_to_ps,frq):
@@ -34,12 +34,12 @@ def acgen(code_len,code_tx,nr_codes,version='a'):
 		random_code='++--+-++++--+----+--+-+++---+-++'	#Code for randomisation
 	elif code_len==256:
 		random_code='++++---+-+-+++--+-+-+-+-----+++---+--+++--+-+++----------++-+--++-+---+---++-+++-+-+-+++--+-+-++++++-+++++++++-+++++--++++++++--+-+--+++++++---+--+++-+-+-+++++++--+++++++----++++------++--+-+--+-+++++-++-+--++---++-+-++-+--+-++---+++++-++--++--+++-+-+-+-++'
-	ac._code=[]
-        try:
-	    lines=open(code_fil,'r').readlines()
-        except:
-	    import lpgen.lp
-	    lines=open(lpgen.lp.lpath()+'/'+code_fil,'r').readlines()
+	ac_code=[]
+	try:
+		lines=open(code_fil,'r').readlines()
+	except:
+		import lpgen.lp
+		lines=open(lpgen.lp.lpath()+'/'+code_fil,'r').readlines()
 	ll=range(len(lines))
 	import numpy
 	numpy.random.seed(0)

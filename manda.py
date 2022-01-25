@@ -21,7 +21,17 @@ def myexp(site):
 	mthread=20
 	dshort=nr_codes-1
 	dlong=15
-	if site=='l':
+	if site=='p':
+		ipp=1250	#IPP length in us
+		baud_len=4	#Baud length in us
+		start_tx=10	#When to start transmitting in us
+		trx_frq=233.1	#Transmit frequency used
+		start_samp=int(baud_len*(code_tx+1./ion_frac))+6	#When to start sampling
+		nr_pulses=2	#Number of pulses to correlate
+		ndgat=180	#Number of Dregion gates
+		cal_samp=0 	#Number of calibration and bakground samples
+		calstop=ipp-2
+	elif site=='l':
 		ipp=1250	#IPP length in us
 		baud_len=4	#Baud length in us
 		start_tx=50	#When to start transmitting in us
@@ -74,6 +84,8 @@ def myexp(site):
 	else:
 		nr_fullgates=int((calstop-start_samp)/baud_len-(8+cal_samp)/ion_frac)-(code_tx-1)
 		clutts=min(150,(nr_fullgates+code_tx-1)*ion_frac)
+	if cal_samp==0:
+	        nr_fullgates=int((calstop-start_samp)/baud_len)-(code_tx-1)
 	print(nr_fullgates)
 
 	ac_code=par_gen.acgen(code_len,code_tx,nr_codes)
