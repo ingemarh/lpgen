@@ -60,7 +60,7 @@ def acgen(code_len,code_tx,nr_codes,version='a'):
 				ac_code[i*code_tx+s]*=-1 # Make it strong
 	return ac_code
 
-def plwingen(nr_pulses,plasma_pulses,plasma_frac,code_tx,nr_fullgates,dspexp,site,ion_frac,tails,mthread,nr_codes,nr_loop,dshort,dlong,ndgat,clutts,toptail,lowtail,loops,ac_code):
+def plwingen(nr_pulses,plasma_pulses,plasma_frac,code_tx,nr_fullgates,dspexp,site,ion_frac,tails,mthread,nr_codes,nr_loop,dshort,dlong,ndgat,clutts,toptail,lowtail,loops,ac_code,nr_cal=0):
 	for j in range(nr_pulses+plasma_pulses):
 		nbits=code_tx
 		nr_gates=nr_fullgates
@@ -91,9 +91,11 @@ def plwingen(nr_pulses,plasma_pulses,plasma_frac,code_tx,nr_fullgates,dspexp,sit
 		debug=1
 		maxthreads=mthread
 		res_mult=1
-		nr_cal=0
 		nr_samp=frac*nbits+(nr_gates-1)*frac
+		#nr_samp=frac*nbits+(nr_gates-1)*frac+nr_cal
+		#nr_cal=0
 		nr_pp=nr_samp+nr_cal
+		nr_pp=nr_samp
 		nr_win=nr_codes
 		nr_rep=nr_win*nr_loop
 		bufjump=-nr_samp*nr_rep

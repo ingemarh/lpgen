@@ -11,7 +11,7 @@ def myexp(site):
 	code_len=16		#Number of Bauds in each code
 	nr_codes=32		#Number of codes
 	code_tx=16		#Number of Bauds to send
-	nr_loop=330		#Number of loops to get wanted integration time 
+	nr_loop=1		#Number of loops to get wanted integration time 
 	plasma_pulses=0		#Number of pulses to correlate
 	plasma_frac=5		#Plasma frac
 	ndgat=0
@@ -22,10 +22,10 @@ def myexp(site):
 	ion_lag=47		#Maxlag for the ion line
 	mthread=20
 	dshort=0
-	ipp=16000*82	#IPP length in us
+	ipp=16000	#IPP length in us
 	baud_len=30	#Baud length in us
 	start_tx=0	#When to start transmitting in us
-	trx_frq=450	#Transmit frequency used
+	trx_frq=440	#Transmit frequency used
 	start_samp=int(90/0.15)	#When to start sampling
 	calstop=ipp
 	if site=='r':
@@ -40,7 +40,7 @@ def myexp(site):
 		calstop=ipp-50
 	else:
 		site='h'
-		isamp=738
+		isamp=740
 		tails=code_tx-2
 		lowtail=tails
 		toptail=0
@@ -50,15 +50,16 @@ def myexp(site):
 	exp_name=dspexp+'_'+site#Name of experiment
 
 	######
-	nr_fullgates=isamp/ion_frac-(code_tx-1)
+	nr_fullgates=isamp//ion_frac-(code_tx-1)
+	nr_cal=isamp%ion_frac
 	if site=='r':
 		clutts=0
 		nr_fullgates=2*guard/baud_len+1
 	else:
-		clutts=4	#Clutter window us
+		clutts=0	#Clutter window us
 	print(isamp,clutts)
 	ac_code=par_gen.acgen(code_len,code_tx,nr_codes,'b')
-	isamp=par_gen.plwingen(nr_pulses,plasma_pulses,plasma_frac,code_tx,nr_fullgates,dspexp,site,ion_frac,tails,mthread,nr_codes,nr_loop,dshort,dlong,ndgat,clutts,toptail,lowtail,loops,ac_code)
+	isamp=par_gen.plwingen(nr_pulses,plasma_pulses,plasma_frac,code_tx,nr_fullgates,dspexp,site,ion_frac,tails,mthread,nr_codes,nr_loop,dshort,dlong,ndgat,clutts,toptail,lowtail,loops,ac_code,nr_cal)+nr_cal
 	print(isamp,clutts)
 
 	par_gen.acdecgen(exp_name,ac_code,code_tx,nr_loop,loops,isamp,ion_frac,ion_lag)
