@@ -161,7 +161,7 @@ def acdecgen(exp_name,ac_code,code_tx,nr_loop,loops,isamp,ion_frac,ion_lag):
 	parfile.close
 	print('%s generated'%parfile.name)
 
-def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,dspexp,start_samp,isamp,calstop,plasma_samp=0,plasma_speed=1,plasma_frq=99):
+def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,dspexp,start_samp,isamp,calstop,gain_offset=0,plasma_samp=0,plasma_speed=1,plasma_frq=99):
 	cal_length=cal_samp*samp_speed
 	t_to_ps=open('%s_%s_t2ps.txt'%(dspexp,site),'w')
 	k=0
@@ -171,15 +171,19 @@ def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ip
 		t1=start_samp+ipp*(k-1)
 		t2=t1+isamp*samp_speed
 		Print_t2ps(t_to_ps,t1,t2,2,trx_frq)
+		if gain_offset:
+			Print_t2ps(t_to_ps,t1,t2,2,trx_frq+gain_offset)
 		if plasma_samp:
-			t2=t1+plasma_samp*plasma_speed
-			Print_t2ps(t_to_ps,t1,t2,2,plasma_frq)
+			t3=t1+plasma_samp*plasma_speed
+			Print_t2ps(t_to_ps,t1,t3,2,plasma_frq)
 		if cal_length:
 			t1=calstop-cal_length+ipp*(k-1)
-			t3=calstop+ipp*(k-1)
+			t4=calstop+ipp*(k-1)
 			if(j%2):
-				Print_t2ps(t_to_ps,t2,t3,1,0)
-			Print_t2ps(t_to_ps,t1,t3,2,trx_frq)
+				Print_t2ps(t_to_ps,t2,t4,1,0)
+			Print_t2ps(t_to_ps,t1,t4,2,trx_frq)
+			if gain_offset:
+				Print_t2ps(t_to_ps,t1,t4,2,trx_frq+gain_offset)
 			if plasma_samp:
 				t2=t1+cal_samp*plasma_speed
 				Print_t2ps(t_to_ps,t1,t2,2,plasma_frq)
