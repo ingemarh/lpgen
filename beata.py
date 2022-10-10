@@ -83,4 +83,4 @@ def myexp(site):
 
 	ac_code=par_gen.acgen(code_len,code_tx,nr_codes)
 	par_gen.acdecgen(exp_name,ac_code,code_tx,nr_loop,loops,isamp,ion_frac,ion_lag)
-	par_gen.t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,dspexp,start_samp,isamp,calstop,gain_offset,plasma_samp,plasma_speed)
+	par_gen.t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,dspexp,start_samp,isamp,calstop,1,gain_offset,plasma_samp,plasma_speed)

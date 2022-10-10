@@ -22,7 +22,7 @@ def AC_Trx(Baud_Len,Code,t_start,t_to_ps,frq):
 		length=Same_Code(Code,j)
 		i=Code[j]
 		t2=t1+length*Baud_Len
-		Print_t2ps(t_to_ps,t1,t2,i,frq)
+		for f in frq: Print_t2ps(t_to_ps,t1,t2,i,f)
 		t1=t2
 		j=j+length
 
@@ -78,12 +78,11 @@ def plwingen(nr_pulses,plasma_pulses,plasma_frac,code_tx,nr_fullgates,dspexp,sit
 			tails=0
 			frac=plasma_frac
 			fft_len=(code_tx+code_tx%2)*frac
-			fft_len=300
 			nr_undec=2
 			undec1=0
 			undec2=nr_fullgates-1
 			do_pp=1
-			codestart=-nbits
+			codestart=0
 		upper_tail=tails
 		lower_tail=tails
 		dl_short=0
@@ -140,7 +139,7 @@ def plwingen(nr_pulses,plasma_pulses,plasma_frac,code_tx,nr_fullgates,dspexp,sit
 			parf.write('%d\n'%ac_code[ii])
 		parlen=npar+code_tx*nr_codes
 		parf.close()
-	print('%s generated\n'%parf.name)
+		print('%s generated\n'%parf.name)
 	return isamp
 
 def cluttgen(exp_name,loops,nr_loop,isamp,clutts,ion_frac):
@@ -161,13 +160,16 @@ def acdecgen(exp_name,ac_code,code_tx,nr_loop,loops,isamp,ion_frac,ion_lag):
 	parfile.close
 	print('%s generated'%parfile.name)
 
-def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,dspexp,start_samp,isamp,calstop,gain_offset=0,plasma_samp=0,plasma_speed=1,plasma_frq=99):
+def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ipp,trx_frq,site,dspexp,start_samp,isamp,calstop,noise_inj=0,gain_offset=0,plasma_samp=0,plasma_speed=1,plasma_frq=99):
 	cal_length=cal_samp*samp_speed
 	t_to_ps=open('%s_%s_t2ps.txt'%(dspexp,site),'w')
+	tf=[trx_frq]
+	if gain_offset: tf.append(trx_frq+gain_offset)
+	if plasma_samp: tf.append(plasma_frq)
 	k=0
 	for j in range(1,loops+1):
 		k=k+1;
-		AC_Trx(baud_len,ac_code[code_len*(j-1):code_len*(j-1)+code_tx],start_tx+ipp*(k-1),t_to_ps,trx_frq)
+		AC_Trx(baud_len,ac_code[code_len*(j-1):code_len*(j-1)+code_tx],start_tx+ipp*(k-1),t_to_ps,tf)
 		t1=start_samp+ipp*(k-1)
 		t2=t1+isamp*samp_speed
 		Print_t2ps(t_to_ps,t1,t2,2,trx_frq)
@@ -179,7 +181,7 @@ def t2ps(cal_samp,samp_speed,loops,baud_len,ac_code,code_len,code_tx,start_tx,ip
 		if cal_length:
 			t1=calstop-cal_length+ipp*(k-1)
 			t4=calstop+ipp*(k-1)
-			if(j%2):
+			if((j+noise_inj)%2):
 				Print_t2ps(t_to_ps,t2,t4,1,0)
 			Print_t2ps(t_to_ps,t1,t4,2,trx_frq)
 			if gain_offset:
